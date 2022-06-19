@@ -1,7 +1,15 @@
 import React from 'react';
 import './App.css';
 
-const ListItem = ({item}) => {
+function getTextBuddies(item){
+  let res = item.text + ": ";
+  item.buddies.forEach((buddy,i) => {
+    res += buddy.text + (i === 0 ? ', ' : ' ')
+  })
+  return res;
+}
+
+const ListItem = ({item, showBuddies}) => {
   return (
       <div style={{
         backgroundColor: item.active ? 'rgb(58, 113, 29)' : !item.done ? 'rgb(221, 242, 210)' : "#DDD", 
@@ -10,8 +18,11 @@ const ListItem = ({item}) => {
         fontSize: 22,
         borderRadius: 10,
         color: item.active ? "#FFF" : !item.done ? "#000" : "#888",     
+        display: 'flex',        
+        justifyContent: 'center'
       }}>
-          {item.text}
+          {!showBuddies ? item.text : getTextBuddies(item)}
+          <br/>
       </div>
   )
 }
@@ -25,6 +36,8 @@ function App() {
   const [list, setList] = React.useState([])
   const [validList, setValidList] = React.useState([])
   const [index, setIndex] = React.useState(null)
+
+  const [showBuddies, setShowBuddies] = React.useState(false)
 
   React.useEffect(() => {
     //getFrom local storage    
@@ -51,10 +64,12 @@ function App() {
       return
     }
     let newList = stringList.split('\n')?.map((item, i) => {
-      return {id: i, text: item, done: false, active: false}
+      return {id: i, text: item, done: false, active: false, buddies: []}
     })
     setList(newList)
     setValidList(newList)
+    setShowBuddies(false)
+    setIndex(null)
   }
 
   function randmoizer(){
@@ -96,8 +111,69 @@ function App() {
     return newList;
   }
 
+  function handleBuddiesAction(show){
+    setShowBuddies(show)
+    if(!show){
+      return
+    }
+    let newList = [...list]
+    let available = []
+    let buddies = 2;
+
+    //seting a id and random id to each item and clearing buddies
+    newList = newList.map((item,i) => {
+      item.id = i
+      item.random = Math.random() * (newList.length * 1000)
+      item.buddies = []
+      return item
+    })
+
+    //sorting it by the random id
+    newList.sort((a,b) => {
+      return a.random - b.random
+    })
+
+    //Getting buddies
+    newList = newList.map(item => {
+      let newItem = {...item}
+      if(!newItem.buddies || newItem.buddies?.length < buddies) {
+        newItem.buddies = [...available]
+      }
+      available.push(newItem)
+      if(available.length > buddies) available.shift()
+      return newItem
+    })
+
+    //Getting final buddies
+    newList = newList.map(item => {
+      let newItem = {...item}
+      if(!newItem.buddies || newItem.buddies?.length < buddies) {
+        newItem.buddies = [...available]
+      }
+      available.push(newItem)
+      if(available.length > buddies) available.shift()
+      return newItem
+    })
+
+    //sorting back by id
+    newList.sort((a,b) => {
+      return a.id - b.id
+    })
+
+    //sorting inside buddies
+    newList = newList.map(item => {
+      item.buddies.sort((a,b) => {
+        return a.text.localeCompare(b.text)
+      })
+      return item
+      })
+    
+
+    setList(newList)
+  }
+
   return (
-    <div className="App" style={{justifyContent: 'center', display: 'flex'}}>
+    <div className="App" style={{justifyContent: 'center', display: 'flex'}}>      
       <div style={{paddingTop: 30, display: 'flex', justifyContent: 'center', flexWrap: 'wrap', width: '90%'}}>
         <div style={styles.inputdiv}>
         <p style={{alignSelf: 'flex-start'}}>Add names:</p>
@@ -114,12 +190,15 @@ function App() {
             setText("")
             getList("")
           }}>Clear</button>
+          <button style={styles.btn} onClick={() => {
+            handleBuddiesAction(!showBuddies)
+          }}>Buddies</button>
         </div>
         <div style={styles.resdiv}>
           <p style={{alignSelf: 'flex-start'}}>Who is next?</p>
           <div style={styles.listItems}>        {list && list.length > 0 &&
                 list.map((item, i) => {
-                    return <ListItem key={i} item={item}/>
+                    return <ListItem key={i} item={item} showBuddies={showBuddies}/>
                 })
             }
           </div>
