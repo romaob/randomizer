@@ -198,6 +198,7 @@ function App() {
           <p style={{alignSelf: 'flex-start'}}>Who is next?</p>
           <div style={styles.listItems}>        {list && list.length > 0 &&
                 list.map((item, i) => {
+                  if(item.text)
                     return <ListItem key={i} item={item} showBuddies={showBuddies}/>
                 })
             }
