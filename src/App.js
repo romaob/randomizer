@@ -63,7 +63,9 @@ function App() {
       setValidList([])
       return
     }
-    let newList = stringList.split('\n')?.map((item, i) => {
+    let newList = stringList.split("\n");
+    newList = newList.filter((item) => item !== "");
+    newList = newList.map((item, i) => {
       return {id: i, text: item, done: false, active: false, buddies: []}
     })
     setList(newList)
@@ -198,7 +200,6 @@ function App() {
           <p style={{alignSelf: 'flex-start'}}>Who is next?</p>
           <div style={styles.listItems}>        {list && list.length > 0 &&
                 list.map((item, i) => {
-                  if(item.text)
                     return <ListItem key={i} item={item} showBuddies={showBuddies}/>
                 })
             }
